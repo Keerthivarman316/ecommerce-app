@@ -1,0 +1,21 @@
+PrismaClientInitializationError: 
+Invalid `prisma.user.findUnique()` invocation in
+F:\ecommerce-app\server\src\controllers\auth.controller.js:13:48
+
+  10 if (!username || !email || !password) {
+  11     return res.status(400).json({ message: 'Please provide all fields' });
+  12 }
+→ 13 const existingUser = await prisma.user.findUnique(
+error: Environment variable not found: DATABASE_URL.
+  -->  schema.prisma:7
+   | 
+ 6 |   provider = "postgresql"
+ 7 |   url      = env("DATABASE_URL")
+   | 
+
+Validation Error Count: 1
+    at $n.handleRequestError (F:\ecommerce-app\server\node_modules\@prisma\client\runtime\library.js:121:7615)
+    at $n.handleAndLogRequestError (F:\ecommerce-app\server\node_modules\@prisma\client\runtime\library.js:121:6623)
+    at $n.request (F:\ecommerce-app\server\node_modules\@prisma\client\runtime\library.js:121:6307)
+    at async l (F:\ecommerce-app\server\node_modules\@prisma\client\runtime\library.js:130:9633)
+    at async register (F:\ecommerce-app\server\src\controllers\auth.controller.js:13:30)
