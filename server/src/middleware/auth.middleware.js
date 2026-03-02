@@ -11,4 +11,13 @@ const authenticateToken = (req, res, next) => {
     });
 
 };
-module.exports = { authenticateToken };
+const isAdmin = (req, res, next) => {
+    if(req.user && req.user.role === 'ADMIN'){
+        next();
+    }
+    else{
+        return res.status(403).json({error: 'Access Denied. Not an admin'});
+    }
+};
+
+module.exports = { authenticateToken, isAdmin };
