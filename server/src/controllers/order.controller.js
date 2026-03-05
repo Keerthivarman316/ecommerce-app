@@ -103,7 +103,67 @@ const getUserOrders = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch orders' });
     }
 };
+
+const getAllOrders = async (req, res) => {
+    try {
+        const orders = await prisma.order.findMany({
+            include: {
+                user: { select: { username: true, email: true } },
+                items: { include: { product: true } },
+            },
+            orderBy: { createdAt: 'desc' }
+        })
+        const serializedOrders = orders.map(order => ({
+            id: order.id.toString(),
+            userId: order.userId.toString(),
+            user: order.user,
+            total: Number(order.total),
+            status: order.status,
+            createdAt: order.createdAt,
+            items: order.items.map(item => ({
+                productId: item.productId.toString(),
+                productName: item.product.productName,
+                quantity: item.quantity,
+                priceAtPurchase: Number(item.priceAtPurchase)
+            }))
+        }));
+        res.json(serializedOrders);
+    }
+    catch (error) {
+        res.status(500).json({ error: 'Failed to fetch orders' });
+    }
+};
+
+const updateOrderStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const validStatuses = ['PENDING', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
+        if (!validStatuses.includes(status)) {
+            return res.status(400).json({ error: 'Invalid order status' });
+        }
+        const order = await prisma.order.update({
+            where: { id: BigInt(id) },
+            data: { status: status }
+        });
+        res.json({
+            id: order.id.toString(),
+            status: order.status,
+            message: 'Order status updated successfully'
+        });
+    }
+    catch (error) {
+        if (error.code === 'P2025') {
+            return res.status(400).json({ error: 'Order not found' });
+        }
+        console.error(error);
+        res.status(500).json({ error: 'Failed to update order status' });
+    }
+};
+
 module.exports = {
     checkout,
-    getUserOrders
+    getUserOrders,
+    getAllOrders,
+    updateOrderStatus
 };  

@@ -1,0 +1,11 @@
+const express = require('express');
+const { getAllUsers, updateUserRole, getUserProfile, updateProfile } = require('../controllers/user.controller');
+const { authenticateToken, isAdmin } = require('../middleware/auth.middleware');
+const { validate, updateUserRoleSchema, updateProfileSchema } = require('../middleware/validate.middleware');
+const router = express.Router();
+router.use(authenticateToken);
+router.get('/', isAdmin, getAllUsers);
+router.put('/:id/role', isAdmin, validate(updateUserRoleSchema), updateUserRole);
+router.get('/profile', getUserProfile);
+router.put('/profile', validate(updateProfileSchema), updateProfile);
+module.exports = router;    
