@@ -1,8 +1,8 @@
 require('dotenv').config();
 const express = require('express')
 const cors = require('cors');
-const app = express()
-const port = 3000
+const app = express();
+const port = process.env.PORT || 3000;
 const authRoutes = require('./routes/auth.routes');
 const productRoutes = require('./routes/product.routes');
 const orderRoutes = require('./routes/order.routes');
