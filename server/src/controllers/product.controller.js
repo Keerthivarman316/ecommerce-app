@@ -3,15 +3,44 @@ const prisma = new PrismaClient();
 
 const getAllProducts = async (req, res) => {
     try {
-        const products = await prisma.product.findMany();
+        const { search, minPrice, maxPrice, category, page = 1, limit = 10 } = req.query;
+        const queryOptions = {
+            where: {},
+            skip: (parseInt(page) - 1) * parseInt(limit),
+            take: parseInt(limit),
+        };
+        if (search) {
+            queryOptions.where.productName = {
+                contains: search,
+                mode: 'insensitive'
+            };
+        }
+        if (minPrice || maxPrice) {
+            queryOptions.where.price = {};
+            if (minPrice) queryOptions.where.price.gte = parseFloat(minPrice);
+            if (maxPrice) queryOptions.where.price.lte = parseFloat(maxPrice);
+        }
+        const [products, totalItems] = await Promise.all([
+            prisma.product.findMany(queryOptions),
+            prisma.product.count({ where: queryOptions.where })
+        ]);
         const serializedProducts = products.map(product => ({
             ...product,
             id: product.id.toString(),
             price: Number(product.price)
         }));
-        res.json(serializedProducts);
+        res.json({
+            products: serializedProducts,
+            pagination: {
+                totalItems,
+                currentPage: parseInt(page),
+                totalPages: Math.ceil(totalItems / parseInt(limit)),
+                limit: parseInt(limit)
+            }
+        });
     }
     catch (error) {
+        console.error('Fetch products error:', error);
         res.status(500).json({ message: 'Failed to fetch products' });
     }
 };

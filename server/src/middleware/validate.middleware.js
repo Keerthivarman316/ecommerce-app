@@ -24,6 +24,18 @@ const updateProfileSchema = Joi.object({
     password: Joi.string().min(6).optional()
 }).min(1);
 
+const createProductSchema = Joi.object({
+    productName: Joi.string().required(),
+    stock: Joi.number().integer().min(0).required(),
+    price: Joi.number().min(0).required()
+});
+
+const updateProductSchema = Joi.object({
+    productName: Joi.string().optional(),
+    stock: Joi.number().integer().min(0).optional(),
+    price: Joi.number().min(0).optional()
+}).min(1);
+
 module.exports = {
-    validate, updateOrderStatusSchema, updateUserRoleSchema, updateProfileSchema
+    validate, updateOrderStatusSchema, updateUserRoleSchema, updateProfileSchema, createProductSchema, updateProductSchema
 };
