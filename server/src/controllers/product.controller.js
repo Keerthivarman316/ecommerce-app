@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 const getAllProducts = async (req, res) => {
     try {
-        const { search, minPrice, maxPrice, category, page = 1, limit = 10 } = req.query;
+        const { search, minPrice, maxPrice, category, platform, brand, page = 1, limit = 10 } = req.query;
         const queryOptions = {
             where: {},
             skip: (parseInt(page) - 1) * parseInt(limit),
@@ -12,6 +12,24 @@ const getAllProducts = async (req, res) => {
         if (search) {
             queryOptions.where.productName = {
                 contains: search,
+                mode: 'insensitive'
+            };
+        }
+        if (category) {
+            queryOptions.where.category = {
+                contains: category,
+                mode: 'insensitive'
+            };
+        }
+        if (platform) {
+            queryOptions.where.platform = {
+                contains: platform,
+                mode: 'insensitive'
+            };
+        }
+        if (brand) {
+            queryOptions.where.brand = {
+                contains: brand,
                 mode: 'insensitive'
             };
         }
@@ -61,12 +79,21 @@ const getProductById = async (req, res) => {
 
 const createProduct = async (req, res) => {
     try {
-        const { productName, stock, price } = req.body;
+        const { productName, stock, price, category, platform, brand, performanceTags, gamerRating, compatibility, stockUrgency, image, description } = req.body;
         const product = await prisma.product.create({
             data: {
                 productName,
                 stock: parseInt(stock),
-                price: parseFloat(price)
+                price: parseFloat(price),
+                category,
+                platform,
+                brand,
+                performanceTags: performanceTags ? performanceTags : [],
+                gamerRating: gamerRating ? parseFloat(gamerRating) : 0,
+                compatibility,
+                stockUrgency,
+                image,
+                description
             }
         });
         res.status(201).json({ ...product, id: product.id.toString(), price: Number(product.price) });
@@ -79,13 +106,22 @@ const createProduct = async (req, res) => {
 const updateProduct = async (req, res) => {
     try {
         const { id } = req.params;
-        const { productName, stock, price } = req.body;
+        const { productName, stock, price, category, platform, brand, performanceTags, gamerRating, compatibility, stockUrgency, image, description } = req.body;
         const product = await prisma.product.update({
             where: { id: BigInt(id) },
             data: {
                 ...(productName && { productName }),
                 ...(stock !== undefined && { stock: parseInt(stock) }),
-                ...(price !== undefined && { price: parseFloat(price) })
+                ...(price !== undefined && { price: parseFloat(price) }),
+                ...(category && { category }),
+                ...(platform !== undefined && { platform }),
+                ...(brand && { brand }),
+                ...(performanceTags && { performanceTags }),
+                ...(gamerRating !== undefined && { gamerRating: parseFloat(gamerRating) }),
+                ...(compatibility !== undefined && { compatibility }),
+                ...(stockUrgency !== undefined && { stockUrgency }),
+                ...(image !== undefined && { image }),
+                ...(description !== undefined && { description })
             }
         });
         res.json({ ...product, id: product.id.toString(), price: Number(product.price) });

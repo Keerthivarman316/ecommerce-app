@@ -17,6 +17,8 @@ model User {
 
   cart   Cart?
   orders Order[]
+  wishlist Wishlist?
+  reviews Review[]
 }
 
 model Product {
@@ -25,8 +27,20 @@ model Product {
   stock       Int
   price       Decimal @db.Decimal(10, 2)
 
+  category String
+  platform String?
+  brand String
+  performanceTags String[]
+  gamerRating Float
+  compatibility String?
+  stockUrgency String?
+  image String?
+  description String?
+
   cartItems  CartItem[]
   orderItems OrderItem[]
+  wishlistItems WishlistItem[]
+  reviews Review[]
 }
 
 model Cart {
@@ -57,6 +71,7 @@ model Order {
 
   user  User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   items OrderItem[]
+  tracking OrderTracking[]
 }
 
 model OrderItem {
@@ -69,4 +84,46 @@ model OrderItem {
   product Product @relation(fields: [productId], references: [id])
 
   @@id([orderId, productId])
+}
+
+model Wishlist{
+  id BigInt @id @default(autoincrement())
+  userId BigInt @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items WishlistItem[]
+}
+
+model WishlistItem{
+  wishlistId BigInt
+  productId BigInt
+
+  wishlist Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete:Cascade)
+
+  @@id([wishlistId, productId])
+}
+
+model Review{
+  id BigInt @id @default(autoincrement())
+  userId BigInt
+  productId BigInt
+  performanceScore Int
+  valueScore Int
+  gamingExperience Int
+  comment String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+}
+
+model OrderTracking{
+  id BigInt @id @default(autoincrement())
+  orderId BigInt
+  status String
+  description String?
+  timestamp DateTime @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
