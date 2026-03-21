@@ -1,15 +1,23 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ShoppingCart, Heart, Search, Menu, User, Sparkles } from 'lucide-react';
 import { useStore } from '@/context/StoreContext';
 import { motion } from 'framer-motion';
 
 export default function Navbar() {
     const { cart, wishlist } = useStore();
+    const router = useRouter();
+    const [searchQuery, setSearchQuery] = useState('');
 
     const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+
+    const handleSearch = () => {
+        const q = searchQuery.trim();
+        if (q) router.push(`/products?search=${encodeURIComponent(q)}`);
+    };
 
     return (
         <nav className="fixed top-0 w-full z-50 glass-panel border-b border-white/5">
@@ -32,11 +40,17 @@ export default function Navbar() {
                     {/* Search Bar */}
                     <div className="hidden md:flex flex-1 max-w-lg mx-8">
                         <div className="relative w-full group">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <div
+                                className="absolute inset-y-0 left-0 pl-3 flex items-center cursor-pointer"
+                                onClick={handleSearch}
+                            >
                                 <Search className="h-5 w-5 text-gray-400 group-focus-within:text-neon-blue transition-colors" />
                             </div>
                             <input
                                 type="text"
+                                value={searchQuery}
+                                onChange={e => setSearchQuery(e.target.value)}
+                                onKeyDown={e => e.key === 'Enter' && handleSearch()}
                                 className="block w-full pl-10 pr-3 py-2 border border-slate-700 rounded-full leading-5 bg-slate-900/50 text-gray-300 placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-neon-blue focus:border-neon-blue focus:bg-slate-900 transition-all duration-300 sm:text-sm"
                                 placeholder="Search games, gear, components..."
                             />

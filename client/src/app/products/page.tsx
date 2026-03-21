@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Filter, SlidersHorizontal, Settings2 } from 'lucide-react';
 import { ProductCard } from '@/components/ui/ProductCard';
@@ -15,12 +16,20 @@ const MOCK_BRANDS = ["All", "NVIDIA", "AMD", "Intel", "ASUS", "Corsair", "Razer"
 export default function ProductsPage() {
     const [products, setProducts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const searchParams = useSearchParams();
 
     // Filter States
+    const [searchText, setSearchText] = useState(searchParams.get('search') || '');
     const [category, setCategory] = useState("All");
     const [platform, setPlatform] = useState("All");
     const [brand, setBrand] = useState("All");
     const [minRating, setMinRating] = useState(0);
+
+    // Sync search text when URL param changes (e.g. from Navbar)
+    useEffect(() => {
+        const q = searchParams.get('search') || '';
+        setSearchText(q);
+    }, [searchParams]);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -28,6 +37,7 @@ export default function ProductsPage() {
             try {
                 // Construct query params
                 const params = new URLSearchParams();
+                if (searchText.trim()) params.append('search', searchText.trim());
                 if (category !== "All") params.append("category", category);
                 if (platform !== "All") params.append("platform", platform);
                 if (brand !== "All") params.append("brand", brand);
@@ -46,7 +56,7 @@ export default function ProductsPage() {
             }
         };
         fetchProducts();
-    }, [category, platform, brand, minRating]);
+    }, [category, platform, brand, minRating, searchText]);
 
     return (
         <div className="flex flex-col md:flex-row gap-8 pb-20 relative">
