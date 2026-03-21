@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🎮 LootBay | Level Up Your Setup
 
 **LootBay** is a premium, high-performance e-commerce platform designed for enthusiasts and builders. Whether you're looking for the latest GPUs or building a custom PC from scratch, LootBay provides a seamless, cyberpunk-inspired experience.
@@ -8,8 +7,8 @@
 ## 🚀 Key Features
 
 - **🛠️ Advanced PC Builder**: Build your dream machine with real-time socket compatibility checking (Intel LGA1700, AMD AM5/AM4, etc.).
+- **🛒 Dynamic Store & Cart**: Effortlessly manage your loot and deploy full PC builds directly to your cart.
 - **🔒 Global Authentication**: Secure user accounts with integrated state management and protected routes.
-- **🛒 Dynamic Cart System**: Effortlessly manage your loot and deploy full PC builds directly to your cart.
 - **🤖 Cyber Assistant**: Integrated AI chatbot to help you navigate the store and find the best components.
 - **💎 Premium UI/UX**: A stunning "Glassmorphism" aesthetic with smooth Framer Motion animations and neon accents.
 
@@ -31,7 +30,7 @@
 
 ### Prerequisites
 - Node.js (v18+)
-- Docker (optional, for DB) or a running PostgreSQL instance.
+- PostgreSQL instance (or Docker)
 
 ### Installation
 
@@ -77,115 +76,8 @@
 
 ## 🤝 Contributing
 
-Contributions are what make the open-source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Feel free to fork and improve this project. Any contributions you make are **greatly appreciated**.
 
 ---
 
 Built with ❤️ by [Keerthivarman](https://github.com/Keerthivarman316)
-=======
-# 🎮 LootBay
-
-LootBay is a gaming-focused e-commerce platform where users can explore and buy gaming products or even build their own PC.
-
-The idea behind this project was to create something more than a basic ecommerce app — something useful for gamers and PC builders.
-
----
-
-## 🚀 Features
-
-* 🛠️ Build your own PC with basic compatibility checks
-* 🛒 Add products or full PC builds directly to cart
-* 🔐 User authentication with protected routes
-* 🤖 Chatbot to help users find products
-* 🎨 Clean gaming-style UI with animations
-
----
-
-## 🛠️ Tech Stack
-
-**Frontend**
-
-* Next.js
-* Tailwind CSS
-* Framer Motion
-
-**Backend**
-
-* Node.js
-* Express
-* PostgreSQL (Prisma)
-* JWT Authentication
-
----
-
-## 📥 How to Run
-
-1. Clone the repo:
-
-```bash
-git clone https://github.com/Keerthivarman316/ecommerce-app.git
-cd ecommerce-app
-```
-
-2. Backend setup:
-
-```bash
-cd server
-npm install
-```
-
-Create a `.env` file with:
-
-```
-DATABASE_URL=
-JWT_SECRET=
-GEMINI_API_KEY=
-```
-
-Then run:
-
-```bash
-npx prisma db push
-npx prisma generate
-npm run dev
-```
-
-3. Frontend setup:
-
-```bash
-cd ../client
-npm install
-npm run dev
-```
-
-4. Open:
-
-```
-http://localhost:3000
-```
-
----
-
-## 📁 Structure
-
-```
-client/   → frontend  
-server/   → backend  
-```
-
----
-
-## 🤝 Contributing
-
-Feel free to fork and improve this project.
-
----
-
-Built by Keerthivarman
->>>>>>> 4ac34c1a09a2e743d83ca1431d61a491c0dd2a5a

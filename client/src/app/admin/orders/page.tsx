@@ -70,7 +70,7 @@ export default function OrderOversight() {
             <div className="space-y-4">
                 {orders.map((order) => (
                     <GlassPanel key={order.id} className="p-6 border-white/5 hover:border-white/10 transition-colors">
-                        <div className="flex flex-col lg:flex-row justify-between gap-6 pb-6 border-b border-white/5 mb-6">
+                        <div className="flex flex-col lg:flex-row justify-between gap-6">
                             <div className="flex items-start gap-4">
                                 <div className="p-3 bg-slate-800 rounded-xl text-slate-400">
                                     <Package className="w-6 h-6" />
@@ -108,15 +108,6 @@ export default function OrderOversight() {
                                     </select>
                                 </div>
                             </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-2">
-                            {order.items.map((item: any, idx: number) => (
-                                <div key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/50 border border-white/5 rounded-lg text-xs">
-                                    <span className="text-neon-purple font-black">{item.quantity}x</span>
-                                    <span className="text-slate-300">{item.productName}</span>
-                                </div>
-                            ))}
                         </div>
                     </GlassPanel>
                 ))}

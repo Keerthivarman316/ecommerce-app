@@ -120,6 +120,11 @@ const getStats = async (req, res) => {
             prisma.order.count(),
             prisma.product.count(),
             prisma.order.findMany({
+                where: {
+                    NOT: {
+                        status: { contains: 'CANCELLED' }
+                    }
+                },
                 select: { total: true }
             })
         ]);
