@@ -1,7 +1,17 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: #000000;
+  --color-slate-panel: #0f172a;
+  --color-neon-blue: #3b82f6;
+  --color-neon-purple: #8b5cf6;
+  --color-neon-green: #10b981;
+  --color-neon-red: #ef4444;
+  --color-foreground: #ffffff;
+}
+
 :root {
-  --background: #050511;
+  --background: #000000;
   --foreground: #ffffff;
 }
 
@@ -10,35 +20,57 @@ body {
   color: var(--foreground);
   font-family: inherit;
   overflow-x: hidden;
+  /* Cyberpunk grid background */
+  background-image: linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
 }
 
-/* Custom glow effect for the navbar links */
-.nav-link {
-  position: relative;
-  transition: all 0.3s ease;
+/* Glassmorphism utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.nav-link::after {
-  content: '';
-  position: absolute;
-  width: 0;
-  height: 2px;
-  bottom: -4px;
-  left: 0;
-  background-color: #3b82f6;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 10px #3b82f6;
+.glass-panel-hover:hover {
+  border-color: rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
 }
 
-.nav-link:hover::after, .nav-link.active::after {
-  width: 100%;
+/* Glowing text utilities */
+.text-glow-blue {
+  text-shadow: 0 0 10px rgba(59, 130, 246, 0.8), 0 0 20px rgba(59, 130, 246, 0.4);
+}
+
+.text-glow-purple {
+  text-shadow: 0 0 10px rgba(139, 92, 246, 0.8), 0 0 20px rgba(139, 92, 246, 0.4);
+}
+
+/* Scrollbar formatting */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #000000;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3b82f6;
 }
 
 .ambient-light {
     position: absolute;
     width: 600px;
     height: 600px;
-    background: radial-gradient(circle, rgba(29,78,216,0.15) 0%, rgba(0,0,0,0) 70%);
+    background: radial-gradient(circle, rgba(139,92,246,0.15) 0%, rgba(0,0,0,0) 70%);
     border-radius: 50%;
     pointer-events: none;
     z-index: 0;

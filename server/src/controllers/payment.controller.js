@@ -3,26 +3,35 @@ const prisma = new PrismaClient();
 
 const checkout = async (req, res) => {
     try {
-        const userId = req.user.userId;
-        const cart = await prisma.cart.findUnique({ 
-            where: { userId: BigInt(userId) },
-            include: { items: { include: { product: true } } } 
-        });
-        if (!cart || cart.items.length === 0) {
-            return res.status(400).json({ message: 'Cart is empty. Cannot proceed to checkout.' });
+        const userId = req.user.id;
+        const { items } = req.body;
+
+        if (!items || items.length === 0) {
+            return res.status(400).json({ message: 'Cart items are missing in payload.' });
         }
+
         let total = 0;
         const orderItems = [];
-        for (const item of cart.items) {
-            const itemTotal = Number(item.product.price) * Number(item.quantity);
+
+        // Validate products and calculate exact total from DB pricing to prevent spoofing
+        for (const item of items) {
+            const product = await prisma.product.findUnique({ where: { id: BigInt(item.productId) } });
+
+            if (!product) return res.status(404).json({ message: `Product ${item.productId} lost to the void.` });
+            if (product.stock < item.quantity) return res.status(400).json({ message: `Insufficient stock for ${product.productName}.` });
+
+            const itemTotal = Number(product.price) * Number(item.quantity);
             total += itemTotal;
+
             orderItems.push({
-                productId: item.productId,
+                productId: product.id,
                 quantity: item.quantity,
-                priceAtPurchase: item.product.price
+                priceAtPurchase: product.price
             });
         }
-        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simulate gateway
+
         const [newOrder] = await prisma.$transaction([
             prisma.order.create({
                 data: {
@@ -34,9 +43,11 @@ const checkout = async (req, res) => {
                     }
                 }
             }),
-            prisma.cartItem.deleteMany({
-                where: { cartId: cart.id }
-            })
+            // Safely decrement stock 
+            ...orderItems.map(oi => prisma.product.update({
+                where: { id: oi.productId },
+                data: { stock: { decrement: oi.quantity } }
+            }))
         ]);
         res.status(201).json({
             message: 'Payment successful! Order placed.',
