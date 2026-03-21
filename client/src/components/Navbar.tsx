@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 export default function Navbar() {
     const { cart, wishlist } = useStore();
-    const { isLoggedIn } = useAuth();
+    const { isLoggedIn, user } = useAuth();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -95,6 +95,11 @@ export default function Navbar() {
                                 )}
                             </Link>
 
+                            {isLoggedIn && user?.role === 'ADMIN' && (
+                                <Link href="/admin" className="text-neon-blue font-black text-[10px] tracking-widest border border-neon-blue/30 px-2 py-1 rounded bg-neon-blue/10 hover:bg-neon-blue/20 transition-all uppercase">
+                                    Admin
+                                </Link>
+                            )}
                             <button
                                 onClick={handleProfileClick}
                                 className="text-gray-400 hover:text-white transition-colors duration-200"

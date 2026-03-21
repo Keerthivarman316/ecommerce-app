@@ -13,6 +13,7 @@ const reviewRoutes = require('./routes/review.routes');
 const wishlistRoutes = require('./routes/wishlist.routes');
 const errorHandler = require('./middleware/error.middleware');
 const chatRoutes = require('./routes/chat.routes');
+const adminRoutes = require('./routes/admin.routes');
 
 app.use(cors());
 app.use(express.json());
@@ -25,6 +26,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
 app.use(errorHandler);
 
 app.get('/', (req, res) => {

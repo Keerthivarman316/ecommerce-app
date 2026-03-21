@@ -7,6 +7,7 @@ type AuthContextType = {
     user: any;
     token: string | null;
     isLoggedIn: boolean;
+    loading: boolean;
     login: (token: string, userData: any) => void;
     logout: () => void;
     checkAuth: () => boolean;
@@ -65,7 +66,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, token, isLoggedIn, login, logout, checkAuth }}>
+        <AuthContext.Provider value={{ user, token, isLoggedIn, loading, login, logout, checkAuth }}>
             {!loading && children}
         </AuthContext.Provider>
     );
