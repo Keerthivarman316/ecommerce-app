@@ -4,11 +4,13 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ShoppingCart, Heart, Search, Menu, User, Sparkles } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 import { useStore } from '@/context/StoreContext';
 import { motion } from 'framer-motion';
 
 export default function Navbar() {
     const { cart, wishlist } = useStore();
+    const { isLoggedIn } = useAuth();
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState('');
 
@@ -17,6 +19,14 @@ export default function Navbar() {
     const handleSearch = () => {
         const q = searchQuery.trim();
         if (q) router.push(`/products?search=${encodeURIComponent(q)}`);
+    };
+
+    const handleProfileClick = () => {
+        if (isLoggedIn) {
+            router.push('/profile');
+        } else {
+            router.push('/auth');
+        }
     };
 
     return (
@@ -85,9 +95,12 @@ export default function Navbar() {
                                 )}
                             </Link>
 
-                            <Link href="/profile" className="text-gray-400 hover:text-white transition-colors duration-200">
+                            <button
+                                onClick={handleProfileClick}
+                                className="text-gray-400 hover:text-white transition-colors duration-200"
+                            >
                                 <User className="h-6 w-6" />
-                            </Link>
+                            </button>
                         </div>
                     </div>
 

@@ -5,19 +5,30 @@ import { User, Package, LogOut, Clock, ShieldCheck, AlertTriangle } from 'lucide
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function ProfilePage() {
+    const { user, token, isLoggedIn, logout, checkAuth } = useAuth();
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const hasMounted = useRef(false);
 
+    // Early return to prevent flash of content before redirect
+    useEffect(() => {
+        checkAuth();
+    }, [isLoggedIn]);
+
+    if (!isLoggedIn) {
+        return (
+            <div className="min-h-[80vh]">
+                {/* Silent spacer to prevent footer flash while redirecting in background */}
+            </div>
+        );
+    }
+
     const fetchOrders = async () => {
-        const token = localStorage.getItem('lootbay_token');
-        if (!token) {
-            router.push('/auth');
-            return;
-        }
+        if (!token) return;
         try {
             const res = await axios.get('http://localhost:5000/api/orders', {
                 headers: { Authorization: `Bearer ${token}` }
@@ -40,7 +51,6 @@ export default function ProfilePage() {
     const handleCancelOrder = async (orderId: string) => {
         if (!confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
         try {
-            const token = localStorage.getItem('lootbay_token');
             await axios.put(`http://localhost:5000/api/orders/${orderId}/cancel`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -59,8 +69,7 @@ export default function ProfilePage() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('lootbay_token');
-        router.push('/');
+        logout();
     };
 
     return (
