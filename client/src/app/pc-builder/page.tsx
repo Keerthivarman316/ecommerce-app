@@ -26,7 +26,7 @@ const UI_STEPS_TEMPLATE = [
 
 export default function PCBuilderPage() {
     const { addToCart } = useStore();
-    const { isLoggedIn, checkAuth } = useAuth();
+    const { isLoggedIn, checkAuth, user } = useAuth();
     const [currentStep, setCurrentStep] = useState(0);
     const [build, setBuild] = useState<Record<string, any>>({});
 
@@ -268,14 +268,37 @@ export default function PCBuilderPage() {
                                 </div>
                             </div>
 
-                            <GlowButton
-                                variant="blue"
-                                className="w-full py-4 text-lg flex items-center justify-center gap-2"
-                                disabled={!allAvailableSelected || hasCompatibilityError || loadingDb}
-                                onClick={addAllToCart}
-                            >
-                                {loadingDb ? 'Fetching Models...' : !allAvailableSelected ? `Select all ${availableStepIds.length} components` : 'Deploy to Cart 🚀'}
-                            </GlowButton>
+                            {user?.role === 'ADMIN' ? (
+                                <div className="mt-8 pt-8 border-t border-slate-700">
+                                    <div className="flex items-center gap-2 text-neon-blue mb-4">
+                                        <ShieldAlert className="w-5 h-5" />
+                                        <span className="text-[10px] font-black uppercase tracking-widest text-glow-blue">Administrative Simulation Mode</span>
+                                    </div>
+                                    <div className="p-4 bg-neon-blue/5 border border-neon-blue/20 rounded-xl text-center">
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed">
+                                            Checkout is restricted for Administrative accounts.<br />
+                                            All component selections are for validation only.
+                                        </p>
+                                    </div>
+                                    <GlowButton
+                                        variant="blue"
+                                        className="w-full py-4 text-lg mt-6 opacity-50 cursor-not-allowed group"
+                                        disabled={true}
+                                    >
+                                        <span className="group-hover:hidden">Administrative View</span>
+                                        <span className="hidden group-hover:inline">Action Not Authorized</span>
+                                    </GlowButton>
+                                </div>
+                            ) : (
+                                <GlowButton
+                                    variant="blue"
+                                    className="w-full py-4 text-lg flex items-center justify-center gap-2 mt-8"
+                                    disabled={!allAvailableSelected || hasCompatibilityError || loadingDb}
+                                    onClick={addAllToCart}
+                                >
+                                    {loadingDb ? 'Fetching Models...' : !allAvailableSelected ? `Select all ${availableStepIds.length} components` : 'Deploy to Cart 🚀'}
+                                </GlowButton>
+                            )}
                         </GlassPanel>
                     </div>
                 </div>

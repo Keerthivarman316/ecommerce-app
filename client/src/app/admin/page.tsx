@@ -11,6 +11,13 @@ export default function AdminOverview() {
     const { token, user } = useAuth();
     const [stats, setStats] = useState<any>(null);
     const [loading, setLoading] = useState(true);
+    const [currentTime, setCurrentTime] = useState(new Date());
+    const [activeMetric, setActiveMetric] = useState('REVENUE');
+
+    useEffect(() => {
+        const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -36,17 +43,6 @@ export default function AdminOverview() {
         { name: 'GEAR MANIFEST', value: stats ? stats.totalProducts : '...', icon: Package, color: 'text-amber-400', bg: 'bg-amber-500/10' },
     ];
 
-    if (loading) {
-        return (
-            <div className="space-y-8 animate-pulse">
-                <div className="h-10 w-48 bg-slate-800 rounded"></div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-slate-800 rounded-xl border border-white/5"></div>)}
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="space-y-10">
             <header className="flex justify-between items-end border-b border-white/5 pb-8">
@@ -58,8 +54,11 @@ export default function AdminOverview() {
                     <h1 className="text-4xl font-black text-white uppercase tracking-tighter">Command Center</h1>
                 </div>
                 <div className="text-right hidden md:block">
-                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Local Timestamp</div>
-                    <div className="text-white font-mono font-bold">{new Date().toLocaleTimeString()}</div>
+                    <div className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">System Time</div>
+                    <div className="text-white font-mono font-bold text-lg tabular-nums">
+                        {currentTime.toLocaleTimeString('en-US', { hour12: false })}
+                        <span className="text-[10px] text-neon-blue ml-1">UTC</span>
+                    </div>
                 </div>
             </header>
 
@@ -73,20 +72,30 @@ export default function AdminOverview() {
                         transition={{ delay: idx * 0.1 }}
                     >
                         <GlassPanel className="p-6 h-full border-white/5 hover:border-neon-blue/20 transition-all group overflow-hidden relative">
-                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <stat.icon className="w-20 h-20" />
-                            </div>
-
-                            <div className="flex justify-between items-start mb-4 relative z-10">
-                                <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
-                                    <stat.icon className="w-5 h-5" />
+                            {loading ? (
+                                <div className="animate-pulse space-y-4">
+                                    <div className="w-10 h-10 bg-slate-800 rounded-lg"></div>
+                                    <div className="h-4 w-24 bg-slate-800 rounded"></div>
+                                    <div className="h-8 w-16 bg-slate-800 rounded"></div>
                                 </div>
-                                <span className="flex items-center text-[10px] font-black text-neon-green bg-neon-green/10 px-1.5 py-0.5 rounded border border-neon-green/20">
-                                    <Activity className="w-3 h-3 mr-1" /> OPTIMAL
-                                </span>
-                            </div>
-                            <div className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{stat.name}</div>
-                            <div className="text-3xl font-black text-white font-mono tracking-tighter">{stat.value}</div>
+                            ) : (
+                                <>
+                                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                                        <stat.icon className="w-20 h-20" />
+                                    </div>
+
+                                    <div className="flex justify-between items-start mb-4 relative z-10">
+                                        <div className={`p-2 rounded-lg ${stat.bg} ${stat.color}`}>
+                                            <stat.icon className="w-5 h-5" />
+                                        </div>
+                                        <span className="flex items-center text-[10px] font-black text-neon-green bg-neon-green/10 px-1.5 py-0.5 rounded border border-neon-green/20">
+                                            <Activity className="w-3 h-3 mr-1" /> OPTIMAL
+                                        </span>
+                                    </div>
+                                    <div className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{stat.name}</div>
+                                    <div className="text-3xl font-black text-white font-mono tracking-tighter">{stat.value}</div>
+                                </>
+                            )}
                         </GlassPanel>
                     </motion.div>
                 ))}
@@ -98,31 +107,48 @@ export default function AdminOverview() {
                 <GlassPanel className="lg:col-span-2 p-8 border-white/5 relative overflow-hidden flex flex-col h-[400px]">
                     <div className="flex justify-between items-center mb-8">
                         <h3 className="text-xs font-black text-white uppercase tracking-widest flex items-center gap-2">
-                            <TrendingUp className="w-4 h-4 text-neon-blue" /> Network Performance
+                            <TrendingUp className="w-4 h-4 text-neon-blue" /> {activeMetric} VIRTUALIZATION
                         </h3>
-                        <div className="flex gap-2">
-                            {['1H', '24H', '7D'].map(t => (
-                                <button key={t} className={`text-[10px] font-black px-2 py-1 rounded border transition-colors ${t === '24H' ? 'border-neon-blue text-neon-blue bg-neon-blue/10' : 'border-white/5 text-slate-500 hover:text-white'}`}>{t}</button>
+                        <div className="flex gap-2 p-1 bg-slate-900 rounded-lg border border-white/5">
+                            {['REVENUE', 'ORDERS', 'USERS'].map(m => (
+                                <button
+                                    key={m}
+                                    onClick={() => setActiveMetric(m)}
+                                    className={`text-[8px] font-black px-3 py-1.5 rounded-md transition-all uppercase tracking-widest ${activeMetric === m ? 'bg-neon-blue text-white shadow-lg shadow-neon-blue/20' : 'text-slate-500 hover:text-white'}`}
+                                >
+                                    {m}
+                                </button>
                             ))}
                         </div>
                     </div>
 
                     <div className="flex-1 flex flex-col justify-end gap-1">
-                        <div className="flex items-end gap-1 h-48">
-                            {[40, 70, 45, 90, 65, 80, 50, 85, 40, 95, 60, 75, 55, 90, 45].map((h, i) => (
-                                <motion.div
-                                    key={i}
-                                    initial={{ height: 0 }}
-                                    animate={{ height: `${h}%` }}
-                                    transition={{ delay: i * 0.05, duration: 1 }}
-                                    className="flex-1 bg-gradient-to-t from-neon-blue/40 to-neon-blue/10 border-t border-neon-blue/50 rounded-t-sm"
-                                />
-                            ))}
+                        <div className="flex items-end gap-1 h-48 px-4">
+                            {[...Array(20)].map((_, i) => {
+                                // Deterministic "random" heights based on metric + index
+                                const base = activeMetric === 'REVENUE' ? 40 : activeMetric === 'ORDERS' ? 20 : 60;
+                                const height = Math.min(95, Math.max(10, base + (Math.sin(i * 0.5) * 20) + (Math.cos(i + (activeMetric === 'REVENUE' ? 1 : 2)) * 15)));
+                                return (
+                                    <motion.div
+                                        key={`${activeMetric}-${i}`}
+                                        initial={{ height: 0 }}
+                                        animate={{ height: `${height}%` }}
+                                        transition={{ delay: i * 0.02, type: 'spring', damping: 15 }}
+                                        className={`flex-1 rounded-t-sm border-t transition-colors duration-500 ${activeMetric === 'REVENUE' ? 'bg-neon-blue/20 border-neon-blue/40' :
+                                                activeMetric === 'ORDERS' ? 'bg-neon-purple/20 border-neon-purple/40' :
+                                                    'bg-neon-green/20 border-neon-green/40'
+                                            }`}
+                                    />
+                                );
+                            })}
                         </div>
-                        <div className="flex justify-between text-[8px] text-slate-700 font-mono py-2 uppercase tracking-widest border-t border-white/5">
-                            <span>00:00 UTC</span>
-                            <span>System Baseline Analytics</span>
-                            <span>{new Date().toLocaleDateString()}</span>
+                        <div className="flex justify-between text-[8px] text-slate-700 font-mono py-4 uppercase tracking-widest border-t border-white/5 mt-4">
+                            <span>00:00:00</span>
+                            <span className="flex items-center gap-2">
+                                <Activity className="w-2 h-2 text-neon-blue" />
+                                ANALYZING {activeMetric} DATA STREAM
+                            </span>
+                            <span>{currentTime.toLocaleDateString()}</span>
                         </div>
                     </div>
                 </GlassPanel>

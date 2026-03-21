@@ -72,28 +72,34 @@ export default function Navbar() {
                         <Link href="/products" className="text-gray-300 hover:text-white transition-colors duration-200 font-medium tracking-wide">
                             Store
                         </Link>
-                        <Link href="/pc-builder" className="text-gray-300 hover:text-neon-purple transition-colors duration-200 font-medium tracking-wide flex items-center gap-1 group">
-                            <span className="group-hover:text-glow-purple">PC Builder</span>
-                        </Link>
+                        {user?.role !== 'ADMIN' && (
+                            <Link href="/pc-builder" className="text-gray-300 hover:text-neon-purple transition-colors duration-200 font-medium tracking-wide flex items-center gap-1 group">
+                                <span className="group-hover:text-glow-purple">PC Builder</span>
+                            </Link>
+                        )}
 
                         <div className="flex items-center space-x-6 border-l border-slate-700 pl-6">
-                            <Link href="/wishlist" className="relative text-gray-400 hover:text-neon-red transition-colors duration-200">
-                                <Heart className="h-6 w-6" />
-                                {wishlist.length > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-neon-red text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
-                                        {wishlist.length}
-                                    </span>
-                                )}
-                            </Link>
+                            {user?.role !== 'ADMIN' && (
+                                <>
+                                    <Link href="/wishlist" className="relative text-gray-400 hover:text-neon-red transition-colors duration-200">
+                                        <Heart className="h-6 w-6" />
+                                        {wishlist.length > 0 && (
+                                            <span className="absolute -top-2 -right-2 bg-neon-red text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center animate-pulse">
+                                                {wishlist.length}
+                                            </span>
+                                        )}
+                                    </Link>
 
-                            <Link href="/cart" className="relative text-gray-400 hover:text-neon-blue transition-colors duration-200">
-                                <ShoppingCart className="h-6 w-6" />
-                                {totalCartItems > 0 && (
-                                    <span className="absolute -top-2 -right-2 bg-neon-blue text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-                                        {totalCartItems}
-                                    </span>
-                                )}
-                            </Link>
+                                    <Link href="/cart" className="relative text-gray-400 hover:text-neon-blue transition-colors duration-200">
+                                        <ShoppingCart className="h-6 w-6" />
+                                        {totalCartItems > 0 && (
+                                            <span className="absolute -top-2 -right-2 bg-neon-blue text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                                                {totalCartItems}
+                                            </span>
+                                        )}
+                                    </Link>
+                                </>
+                            )}
 
                             {isLoggedIn && user?.role === 'ADMIN' && (
                                 <Link href="/admin" className="text-neon-blue font-black text-[10px] tracking-widest border border-neon-blue/30 px-2 py-1 rounded bg-neon-blue/10 hover:bg-neon-blue/20 transition-all uppercase">
