@@ -44,15 +44,15 @@ export default function PCBuilderPage() {
                 const rams = products.filter((p: any) => p.category === 'RAM');
                 const gpus = products.filter((p: any) => p.category === 'GPU');
 
-                // Construct the dynamic nodes using UI templates
-                const steps: BuilderStep[] = [
+                // Only include steps that have at least one DB option
+                const allSteps: BuilderStep[] = [
                     { ...UI_STEPS_TEMPLATE[0], options: cpus },
                     { ...UI_STEPS_TEMPLATE[1], options: mobos },
                     { ...UI_STEPS_TEMPLATE[2], options: rams },
                     { ...UI_STEPS_TEMPLATE[3], options: gpus }
                 ];
-
-                setDynamicSteps(steps);
+                const availableSteps = allSteps.filter(s => s.options.length > 0);
+                setDynamicSteps(availableSteps);
             } catch (error) {
                 console.error("Failed to load component architectures", error);
             } finally {
@@ -80,11 +80,18 @@ export default function PCBuilderPage() {
     };
 
     const addAllToCart = () => {
-        Object.values(build).forEach(item => {
-            addToCart(item); // They are officially DB nodes now, passing raw object is perfectly resilient!
-        });
-        alert("Rig components successfully grouped and deployed to Cart! 🚀");
+        const selected = Object.values(build);
+        if (selected.length === 0) {
+            alert('Select at least one component to build your rig!');
+            return;
+        }
+        selected.forEach(item => addToCart(item));
+        alert(`${selected.length} component(s) deployed to Cart! 🚀`);
     };
+
+    // Build is ready when all available (non-empty) steps have a selection
+    const availableStepIds = dynamicSteps.map(s => s.id);
+    const allAvailableSelected = availableStepIds.length > 0 && availableStepIds.every(id => build[id]);
 
     return (
         <div className="max-w-6xl mx-auto pb-20 mt-8">
@@ -140,7 +147,13 @@ export default function PCBuilderPage() {
                                 transition={{ duration: 0.3 }}
                                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
                             >
-                                {activeStepData?.options?.map((option: any) => {
+                                {activeStepData?.options?.length === 0 ? (
+                                    <div className="col-span-2 flex flex-col items-center justify-center h-48 text-slate-600">
+                                        <ShieldAlert className="w-10 h-10 mb-3 opacity-50" />
+                                        <p className="font-semibold">No {activeStepData?.label} found in inventory.</p>
+                                        <p className="text-sm mt-1 opacity-70">This category has no stocked products.</p>
+                                    </div>
+                                ) : activeStepData?.options?.map((option: any) => {
                                     const isSelected = build[activeStepData.id]?.id === option.id;
 
                                     let isWarning = false;
@@ -222,10 +235,10 @@ export default function PCBuilderPage() {
                             <GlowButton
                                 variant="blue"
                                 className="w-full py-4 text-lg flex items-center justify-center gap-2"
-                                disabled={Object.keys(build).length === 0 || hasCompatibilityError || loadingDb}
+                                disabled={!allAvailableSelected || hasCompatibilityError || loadingDb}
                                 onClick={addAllToCart}
                             >
-                                {loadingDb ? "Fetching Models..." : "Deploy to Cart 🚀"}
+                                {loadingDb ? 'Fetching Models...' : !allAvailableSelected ? `Select all ${availableStepIds.length} components` : 'Deploy to Cart 🚀'}
                             </GlowButton>
                         </GlassPanel>
                     </div>
