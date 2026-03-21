@@ -1,4 +1,4 @@
-require('dotenv').config();
+require('dotenv').config({ path: require('path').resolve(__dirname, '../../.env') });
 const express = require('express')
 const cors = require('cors');
 const app = express();
@@ -12,6 +12,7 @@ const paymentRoutes = require('./routes/payment.routes');
 const reviewRoutes = require('./routes/review.routes');
 const wishlistRoutes = require('./routes/wishlist.routes');
 const errorHandler = require('./middleware/error.middleware');
+const chatRoutes = require('./routes/chat.routes');
 
 app.use(cors());
 app.use(express.json());
@@ -23,6 +24,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/wishlist', wishlistRoutes);
+app.use('/api/chat', chatRoutes);
 app.use(errorHandler);
 
 app.get('/', (req, res) => {
