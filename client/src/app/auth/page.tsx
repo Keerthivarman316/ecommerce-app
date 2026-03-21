@@ -6,9 +6,11 @@ import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { ShieldCheck, User, Mail, Lock, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function AuthPage() {
     const router = useRouter();
+    const { login } = useAuth();
     const [isLogin, setIsLogin] = useState(true);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -27,8 +29,7 @@ export default function AuthPage() {
             if (isLogin) {
                 // Login Logic
                 const res = await axios.post('http://localhost:5000/api/auth/login', { email, password });
-                localStorage.setItem('lootbay_token', res.data.token);
-                localStorage.setItem('lootbay_user', JSON.stringify(res.data.user));
+                login(res.data.token, res.data.user);
                 router.push('/'); // Redirect Home
             } else {
                 // Register Logic

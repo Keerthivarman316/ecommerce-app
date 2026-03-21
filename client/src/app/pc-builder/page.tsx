@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Cpu, Monitor, HardDrive, Zap, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlowButton } from '@/components/ui/GlowButton';
+import { useAuth } from '@/context/AuthContext';
 import { useStore } from '@/context/StoreContext';
 
 import axios from 'axios';
@@ -25,12 +26,28 @@ const UI_STEPS_TEMPLATE = [
 
 export default function PCBuilderPage() {
     const { addToCart } = useStore();
+    const { isLoggedIn, checkAuth } = useAuth();
     const [currentStep, setCurrentStep] = useState(0);
     const [build, setBuild] = useState<Record<string, any>>({});
 
     // Data Loading & Compilation Status
     const [loadingDb, setLoadingDb] = useState(true);
     const [dynamicSteps, setDynamicSteps] = useState<BuilderStep[]>([]);
+
+    const getSocket = (product: any) => {
+        if (!product) return null;
+        if (product.compatibility) return product.compatibility;
+        const name = product.productName.toUpperCase();
+        if (name.includes('LGA1700') || name.includes('Z790') || name.includes('B760') || name.includes('H610') || name.includes('14900') || name.includes('13900') || name.includes('12900')) return 'LGA1700';
+        if (name.includes('AM5') || name.includes('B650') || name.includes('X670') || name.includes('7950X') || name.includes('7800X3D') || name.includes('9950X')) return 'AM5';
+        if (name.includes('AM4') || name.includes('B550') || name.includes('X570') || name.includes('5950X') || name.includes('5800X3D')) return 'AM4';
+        if (name.includes('LGA1200') || name.includes('Z590') || name.includes('B560') || name.includes('11900') || name.includes('10900')) return 'LGA1200';
+
+        // Broad fallbacks
+        if (name.includes('INTEL')) return 'Intel LGA';
+        if (name.includes('RYZEN')) return 'AMD AM5';
+        return null;
+    };
 
     // Dynamically query database components once mounted
     React.useEffect(() => {
@@ -64,15 +81,25 @@ export default function PCBuilderPage() {
 
     const activeStepData = dynamicSteps[currentStep];
 
-    // Compatibility logic (using hardware attributes organically stored in DB)
-    const cpuSocket = build['cpu']?.compatibility || build['cpu']?.productName.includes('Intel') ? 'Intel LGA' : build['cpu']?.productName.includes('Ryzen') ? 'AMD AM5' : null;
-    const moboSocket = build['mobo']?.compatibility || build['mobo']?.productName.includes('Z790') ? 'Intel LGA' : build['mobo']?.productName.includes('B650') ? 'AMD AM5' : null;
+    // Compatibility logic
+    const cpuSocket = getSocket(build['cpu']);
+    const moboSocket = getSocket(build['mobo']);
 
     const hasCompatibilityError = cpuSocket && moboSocket && cpuSocket !== moboSocket;
 
     const total = Object.values(build).reduce((sum, item) => sum + Number(item.price), 0);
 
     const handleSelect = (item: any) => {
+        // Enforce compatibility during selection
+        if (activeStepData.id === 'mobo' && cpuSocket && cpuSocket !== getSocket(item)) {
+            alert(`This motherboard is for ${getSocket(item)} sockets, but your CPU is ${cpuSocket}.`);
+            return;
+        }
+        if (activeStepData.id === 'cpu' && moboSocket && moboSocket !== getSocket(item)) {
+            alert(`This CPU is for ${getSocket(item)} sockets, but your motherboard is ${moboSocket}.`);
+            return;
+        }
+
         setBuild({ ...build, [activeStepData.id]: item });
         if (currentStep < dynamicSteps.length - 1) {
             setTimeout(() => setCurrentStep(prev => prev + 1), 300);
@@ -80,11 +107,19 @@ export default function PCBuilderPage() {
     };
 
     const addAllToCart = () => {
+        if (!checkAuth()) return;
+
         const selected = Object.values(build);
         if (selected.length === 0) {
             alert('Select at least one component to build your rig!');
             return;
         }
+
+        if (hasCompatibilityError) {
+            alert('Your build has compatibility errors. Please resolve them before adding to cart.');
+            return;
+        }
+
         selected.forEach(item => addToCart(item));
         alert(`${selected.length} component(s) deployed to Cart! 🚀`);
     };
@@ -157,16 +192,17 @@ export default function PCBuilderPage() {
                                     const isSelected = build[activeStepData.id]?.id === option.id;
 
                                     let isWarning = false;
-                                    if (activeStepData.id === 'mobo' && cpuSocket && cpuSocket !== (option.compatibility || (option.productName.includes('Z790') ? 'Intel LGA' : 'AMD AM5'))) isWarning = true;
-                                    if (activeStepData.id === 'cpu' && moboSocket && moboSocket !== (option.compatibility || (option.productName.includes('Intel') ? 'Intel LGA' : 'AMD AM5'))) isWarning = true;
+                                    const optSocket = getSocket(option);
+                                    if (activeStepData.id === 'mobo' && cpuSocket && cpuSocket !== optSocket) isWarning = true;
+                                    if (activeStepData.id === 'cpu' && moboSocket && moboSocket !== optSocket) isWarning = true;
 
                                     return (
                                         <div
                                             key={option.id}
                                             onClick={() => handleSelect(option)}
-                                            className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected ? 'bg-neon-blue/10 border-neon-blue shadow-[0_0_15px_rgba(59,130,246,0.3)]' :
-                                                isWarning ? 'bg-slate-900/40 border-slate-800 opacity-50' :
-                                                    'bg-slate-800/40 border-slate-700 hover:border-slate-500 hover:bg-slate-800'
+                                            className={`p-4 rounded-xl border-2 transition-all ${isSelected ? 'bg-neon-blue/10 border-neon-blue shadow-[0_0_15px_rgba(59,130,246,0.3)]' :
+                                                isWarning ? 'bg-slate-900/40 border-slate-800 opacity-30 grayscale cursor-not-allowed' :
+                                                    'bg-slate-800/40 border-slate-700 hover:border-slate-500 hover:bg-slate-800 cursor-pointer'
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-2">
@@ -174,7 +210,7 @@ export default function PCBuilderPage() {
                                             </div>
 
                                             <div className="flex items-center justify-between mt-6">
-                                                <span className="text-xs text-slate-500 uppercase tracking-widest">{option.compatibility || option.brand || '-'}</span>
+                                                <span className="text-xs text-slate-500 uppercase tracking-widest">{optSocket || option.brand || '-'}</span>
                                                 <span className="text-lg font-black text-white">₹{Number(option.price).toLocaleString()}</span>
                                             </div>
 

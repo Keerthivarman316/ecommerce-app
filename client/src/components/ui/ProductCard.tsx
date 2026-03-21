@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { ShoppingCart, Star, Zap, Clock } from 'lucide-react';
 import { GlassPanel } from './GlassPanel';
 import { GlowButton } from './GlowButton';
+import { useAuth } from '@/context/AuthContext';
 import { useStore } from '@/context/StoreContext';
 
 interface Product {
@@ -21,9 +22,15 @@ interface Product {
 
 export function ProductCard({ product }: { product: Product }) {
     const { addToCart } = useStore();
+    const { isLoggedIn, checkAuth } = useAuth();
 
     const isLowStock = product.stock > 0 && product.stock <= 5;
     const isOutOfStock = product.stock === 0;
+
+    const handleAddToCart = () => {
+        if (!checkAuth()) return;
+        addToCart(product);
+    };
 
     return (
         <GlassPanel interactive className="flex flex-col h-full relative overflow-hidden group">
@@ -90,7 +97,7 @@ export function ProductCard({ product }: { product: Product }) {
                         variant="blue"
                         className="px-3 py-2"
                         disabled={isOutOfStock}
-                        onClick={() => addToCart(product)}
+                        onClick={handleAddToCart}
                         glowOnHoverOnly
                     >
                         <ShoppingCart className="w-5 h-5" />
