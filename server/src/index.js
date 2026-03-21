@@ -9,6 +9,8 @@ const orderRoutes = require('./routes/order.routes');
 const cartRoutes = require('./routes/cart.routes');
 const userRoutes = require('./routes/user.routes');
 const paymentRoutes = require('./routes/payment.routes');
+const reviewRoutes = require('./routes/review.routes');
+const wishlistRoutes = require('./routes/wishlist.routes');
 const errorHandler = require('./middleware/error.middleware');
 
 app.use(cors());
@@ -19,6 +21,8 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/payment', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/wishlist', wishlistRoutes);
 app.use(errorHandler);
 
 app.get('/', (req, res) => {

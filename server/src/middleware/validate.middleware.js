@@ -27,13 +27,31 @@ const updateProfileSchema = Joi.object({
 const createProductSchema = Joi.object({
     productName: Joi.string().required(),
     stock: Joi.number().integer().min(0).required(),
-    price: Joi.number().min(0).required()
+    price: Joi.number().min(0).required(),
+    category: Joi.string().required(),
+    platform: Joi.string().optional(),
+    brand: Joi.string().required(),
+    performanceTags: Joi.array().items(Joi.string()).optional(),
+    gamerRating: Joi.number().min(0).max(10).optional(),
+    compatibility: Joi.string().optional(),
+    stockUrgency: Joi.string().optional(),
+    image: Joi.string().optional(),
+    description: Joi.string().optional()
 });
 
 const updateProductSchema = Joi.object({
     productName: Joi.string().optional(),
     stock: Joi.number().integer().min(0).optional(),
-    price: Joi.number().min(0).optional()
+    price: Joi.number().min(0).optional(),
+    category: Joi.string().optional(),
+    platform: Joi.string().optional(),
+    brand: Joi.string().optional(),
+    performanceTags: Joi.array().items(Joi.string()).optional(),
+    gamerRating: Joi.number().min(0).max(10).optional(),
+    compatibility: Joi.string().optional(),
+    stockUrgency: Joi.string().optional(),
+    image: Joi.string().optional(),
+    description: Joi.string().optional()
 }).min(1);
 
 module.exports = {

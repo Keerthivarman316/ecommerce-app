@@ -17,19 +17,19 @@ const getAllProducts = async (req, res) => {
         }
         if (category) {
             queryOptions.where.category = {
-                contains: category,
+                equals: category,
                 mode: 'insensitive'
             };
         }
         if (platform) {
             queryOptions.where.platform = {
-                contains: platform,
+                equals: platform,
                 mode: 'insensitive'
             };
         }
         if (brand) {
             queryOptions.where.brand = {
-                contains: brand,
+                equals: brand,
                 mode: 'insensitive'
             };
         }
@@ -37,6 +37,13 @@ const getAllProducts = async (req, res) => {
             queryOptions.where.price = {};
             if (minPrice) queryOptions.where.price.gte = parseFloat(minPrice);
             if (maxPrice) queryOptions.where.price.lte = parseFloat(maxPrice);
+        }
+        if (req.query.performanceTags) {
+            const tagsArray = req.query.performanceTags.split(',');
+            queryOptions.where.performanceTags = { hasSome: tagsArray };
+        }
+        if (req.query.gamerRating) {
+            queryOptions.where.gamerRating = { gte: parseFloat(req.query.gamerRating) };
         }
         const [products, totalItems] = await Promise.all([
             prisma.product.findMany(queryOptions),
@@ -142,10 +149,44 @@ const deleteProduct = async (req, res) => {
     }
 };
 
+const getRecommendations = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const currentProduct = await prisma.product.findUnique({ where: { id: BigInt(id) } });
+
+        if (!currentProduct) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        const recommendations = await prisma.product.findMany({
+            where: {
+                id: { not: BigInt(id) },
+                OR: [
+                    { category: currentProduct.category },
+                    { brand: currentProduct.brand }
+                ]
+            },
+            take: 4
+        });
+
+        const serialized = recommendations.map(product => ({
+            ...product,
+            id: product.id.toString(),
+            price: Number(product.price)
+        }));
+
+        res.json(serialized);
+    } catch (error) {
+        console.error('Recommendations error:', error);
+        res.status(500).json({ message: 'Failed to fetch recommendations' });
+    }
+};
+
 module.exports = {
     getAllProducts,
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getRecommendations
 };
