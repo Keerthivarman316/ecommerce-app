@@ -42,17 +42,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     const logout = () => {
-        localStorage.removeItem('lootbay_token');
-        localStorage.removeItem('lootbay_user');
+        // Clear state first
         setToken(null);
         setUser(null);
         setIsLoggedIn(false);
-        router.push('/auth');
+
+        // Clear storage
+        localStorage.removeItem('lootbay_token');
+        localStorage.removeItem('lootbay_user');
+
+        // Single point of redirection
+        router.replace('/auth');
     };
 
     const checkAuth = () => {
-        if (!isLoggedIn) {
-            router.push('/auth');
+        const hasToken = !!localStorage.getItem('lootbay_token');
+        if (!isLoggedIn && !hasToken) {
+            router.replace('/auth');
             return false;
         }
         return true;

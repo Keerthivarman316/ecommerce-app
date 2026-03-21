@@ -14,19 +14,6 @@ export default function ProfilePage() {
     const router = useRouter();
     const hasMounted = useRef(false);
 
-    // Early return to prevent flash of content before redirect
-    useEffect(() => {
-        checkAuth();
-    }, [isLoggedIn]);
-
-    if (!isLoggedIn) {
-        return (
-            <div className="min-h-[80vh]">
-                {/* Silent spacer to prevent footer flash while redirecting in background */}
-            </div>
-        );
-    }
-
     const fetchOrders = async () => {
         if (!token) return;
         try {
@@ -47,6 +34,20 @@ export default function ProfilePage() {
         hasMounted.current = true;
         fetchOrders();
     }, []); // empty deps - run once on mount only
+
+    useEffect(() => {
+        checkAuth();
+    }, []);
+
+    if (!isLoggedIn) {
+        return (
+            <div className="min-h-[80vh]">
+                {/* Silent spacer to prevent footer flash while redirecting in background */}
+            </div>
+        );
+    }
+
+
 
     const handleCancelOrder = async (orderId: string) => {
         if (!confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
