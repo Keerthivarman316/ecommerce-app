@@ -7,11 +7,13 @@ import { Heart, ShoppingCart, Star, Cpu, ShieldCheck, Package, ArrowLeft, Minus,
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { useStore } from '@/context/StoreContext';
+import { useAuth } from '@/context/AuthContext';
 import Link from 'next/link';
 
 export default function ProductDetailPage() {
     const { id } = useParams();
     const { addToCart, wishlist, toggleWishlist } = useStore();
+    const { user } = useAuth();
     const [product, setProduct] = useState<any>(null);
     const [quantity, setQuantity] = useState(1);
 
@@ -106,20 +108,28 @@ export default function ProductDetailPage() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
-                        <GlowButton variant="blue" className="py-4 text-lg w-full" onClick={() => addToCart(product, quantity)}>
-                            <ShoppingCart className="w-5 h-5" /> Add to Cart
-                        </GlowButton>
-                        <GlowButton
-                            variant={isWishlisted ? "red" : "purple"}
-                            glowOnHoverOnly
-                            onClick={() => toggleWishlist(product)}
-                            className="py-4 text-lg w-full bg-slate-900 border-slate-700 hover:border-current"
-                        >
-                            <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-neon-red' : ''}`} />
-                            {isWishlisted ? 'Saved' : 'Wishlist'}
-                        </GlowButton>
-                    </div>
+                    {user?.role === 'ADMIN' ? (
+                        <div className="bg-neon-blue/10 border border-neon-blue/20 rounded-xl p-6 text-center">
+                            <div className="text-neon-blue font-black uppercase tracking-widest text-sm mb-2">Administrative View</div>
+                            <p className="text-slate-400 text-xs">Ordering is disabled for Admin accounts. Manage this product in the dashboard.</p>
+                            <Link href="/admin/products" className="inline-block mt-4 text-neon-blue hover:underline text-sm font-bold">Open Inventory Control →</Link>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                            <GlowButton variant="blue" className="py-4 text-lg w-full" onClick={() => addToCart(product, quantity)}>
+                                <ShoppingCart className="w-5 h-5" /> Add to Cart
+                            </GlowButton>
+                            <GlowButton
+                                variant={isWishlisted ? "red" : "purple"}
+                                glowOnHoverOnly
+                                onClick={() => toggleWishlist(product)}
+                                className="py-4 text-lg w-full bg-slate-900 border-slate-700 hover:border-current"
+                            >
+                                <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-neon-red' : ''}`} />
+                                {isWishlisted ? 'Saved' : 'Wishlist'}
+                            </GlowButton>
+                        </div>
+                    )}
 
                     {/* Specs Panel */}
                     <GlassPanel className="p-6">
