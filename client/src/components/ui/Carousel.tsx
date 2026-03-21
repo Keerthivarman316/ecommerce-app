@@ -6,7 +6,7 @@ import { GlowButton } from './GlowButton';
 
 interface CarouselProps {
     children: React.ReactNode;
-    title: string;
+    title: React.ReactNode;
 }
 
 export function Carousel({ title, children }: CarouselProps) {

@@ -7,6 +7,8 @@ import { ArrowRight, Flame, Sparkles } from 'lucide-react';
 import { Carousel } from '@/components/ui/Carousel';
 import { ProductCard } from '@/components/ui/ProductCard';
 import { GlowButton } from '@/components/ui/GlowButton';
+import { useAuth } from '@/context/AuthContext';
+import { useRouter } from 'next/navigation';
 import axios from 'axios';
 
 // Mock data fallback to ensure UI looks stunning even if backend is not running
@@ -19,6 +21,8 @@ const MOCK_PRODUCTS = [
 ];
 
 export default function Home() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [products, setProducts] = useState<any[]>(MOCK_PRODUCTS);
   const [loading, setLoading] = useState(true);
 
@@ -89,14 +93,16 @@ export default function Home() {
             transition={{ delay: 0.6 }}
             className="flex flex-wrap gap-4"
           >
-            <GlowButton variant="blue" className="px-8 py-4 text-base">
+            <GlowButton onClick={() => router.push('/products')} variant="blue" className="px-8 py-4 text-base">
               Explore Gear <ArrowRight className="w-5 h-5" />
             </GlowButton>
-            <Link href="/pc-builder">
-              <GlowButton variant="purple" glowOnHoverOnly className="px-8 py-4 text-base bg-transparent border-slate-700 text-white hover:border-neon-purple">
-                Start PC Builder
-              </GlowButton>
-            </Link>
+            {user?.role !== 'ADMIN' && (
+              <Link href="/pc-builder">
+                <GlowButton variant="purple" glowOnHoverOnly className="px-8 py-4 text-base bg-transparent border-slate-700 text-white hover:border-neon-purple">
+                  Start PC Builder
+                </GlowButton>
+              </Link>
+            )}
           </motion.div>
         </div>
       </motion.section>
