@@ -161,9 +161,38 @@ const updateOrderStatus = async (req, res) => {
     }
 };
 
+const cancelOrder = async (req, res) => {
+    try {
+        const userId = req.user.id || req.user.user.id;
+        const { id } = req.params;
+
+        const order = await prisma.order.findUnique({ where: { id: BigInt(id) } });
+        if (!order) return res.status(404).json({ error: 'Order not found' });
+
+        if (order.userId !== BigInt(userId)) {
+            return res.status(403).json({ error: 'Unauthorized to modify this order' });
+        }
+
+        if (order.status.includes('SHIPPED') || order.status.includes('DELIVERED') || order.status.includes('CANCELLED')) {
+            return res.status(400).json({ error: 'Order is locked and cannot be cancelled.' });
+        }
+
+        const updated = await prisma.order.update({
+            where: { id: BigInt(id) },
+            data: { status: 'CANCELLED' }
+        });
+
+        res.json({ id: updated.id.toString(), status: updated.status, message: 'Order successfully cancelled!' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to abort order' });
+    }
+}
+
 module.exports = {
     checkout,
     getUserOrders,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    cancelOrder
 };  

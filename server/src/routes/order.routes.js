@@ -1,5 +1,5 @@
 const express = require('express');
-const { checkout, getUserOrders, getAllOrders, updateOrderStatus } = require('../controllers/order.controller');
+const { checkout, getUserOrders, getAllOrders, updateOrderStatus, cancelOrder } = require('../controllers/order.controller');
 const { authenticateToken, isAdmin } = require('../middleware/auth.middleware');
 const router = express.Router();
 router.use(authenticateToken);
@@ -7,4 +7,5 @@ router.post('/checkout', checkout);
 router.get('/', getUserOrders);
 router.get('/all', isAdmin, getAllOrders);
 router.put('/:id/status', isAdmin, updateOrderStatus);
+router.put('/:id/cancel', cancelOrder);
 module.exports = router;    

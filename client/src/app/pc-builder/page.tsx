@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert } from 'lucide-react';
+import { Cpu, Monitor, HardDrive, Zap, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { useStore } from '@/context/StoreContext';
@@ -39,10 +39,10 @@ export default function PCBuilderPage() {
                 const res = await axios.get('http://localhost:5000/api/products?limit=100');
                 const products = res.data.products;
 
-                const cpus = products.filter((p: any) => p.category === 'Processors');
-                const mobos = products.filter((p: any) => p.category === 'Motherboards');
-                const rams = products.filter((p: any) => p.category === 'Memory');
-                const gpus = products.filter((p: any) => p.category === 'Graphics Cards');
+                const cpus = products.filter((p: any) => p.category === 'CPU');
+                const mobos = products.filter((p: any) => p.category === 'Motherboard');
+                const rams = products.filter((p: any) => p.category === 'RAM');
+                const gpus = products.filter((p: any) => p.category === 'GPU');
 
                 // Construct the dynamic nodes using UI templates
                 const steps: BuilderStep[] = [

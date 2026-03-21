@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
-import { User, Package, LogOut, Clock, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { User, Package, LogOut, Clock, ShieldCheck, AlertTriangle } from 'lucide-react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
@@ -10,29 +10,53 @@ export default function ProfilePage() {
     const [orders, setOrders] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const router = useRouter();
+    const hasMounted = useRef(false);
+
+    const fetchOrders = async () => {
+        const token = localStorage.getItem('lootbay_token');
+        if (!token) {
+            router.push('/auth');
+            return;
+        }
+        try {
+            const res = await axios.get('http://localhost:5000/api/orders', {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setOrders(res.data);
+        } catch (err) {
+            console.error('Failed to fetch order history:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchOrders = async () => {
-            const token = localStorage.getItem('lootbay_token');
-            if (!token) {
-                router.push('/auth');
-                return;
-            }
-
-            try {
-                const res = await axios.get('http://localhost:5000/api/orders', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                setOrders(res.data);
-            } catch (err) {
-                console.error("Failed to fetch orders:", err);
-            } finally {
-                setLoading(false);
-            }
-        };
-
+        // Only run after client-side hydration to safely access localStorage
+        if (hasMounted.current) return;
+        hasMounted.current = true;
         fetchOrders();
-    }, [router]);
+    }, []); // empty deps - run once on mount only
+
+    const handleCancelOrder = async (orderId: string) => {
+        if (!confirm('Are you sure you want to cancel this order? This cannot be undone.')) return;
+        try {
+            const token = localStorage.getItem('lootbay_token');
+            await axios.put(`http://localhost:5000/api/orders/${orderId}/cancel`, {}, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert('Order cancelled successfully.');
+            fetchOrders();
+        } catch (error: any) {
+            const msg = error.response?.data?.error || 'Failed to cancel order.';
+            alert(msg);
+        }
+    };
+
+    // An order can be cancelled if it hasn't been dispatched yet
+    const isCancellable = (status: string) => {
+        const s = status.split('|')[0].toUpperCase();
+        return s !== 'CANCELLED' && s !== 'SHIPPED' && s !== 'DELIVERED';
+    };
 
     const handleLogout = () => {
         localStorage.removeItem('lootbay_token');
@@ -76,8 +100,12 @@ export default function ProfilePage() {
                                             <div className="text-xs text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}</div>
                                         </div>
                                         <div className="text-left sm:text-right">
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase bg-neon-green/10 text-neon-green border border-neon-green/20 mb-2">
-                                                <ShieldCheck className="w-3 h-3" /> {order.status.split('|')[0]}
+                                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase mb-2 border ${order.status.includes('CANCELLED') ? 'bg-red-500/10 text-red-500 border-red-500/20' :
+                                                order.status.includes('SHIPPED') ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' :
+                                                    'bg-neon-green/10 text-neon-green border-neon-green/20'
+                                                }`}>
+                                                {order.status.includes('CANCELLED') ? <AlertTriangle className="w-3 h-3" /> : <ShieldCheck className="w-3 h-3" />}
+                                                {order.status.split('|')[0]}
                                             </span>
                                             {order.status.includes('|') && (
                                                 <span className="block text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">
@@ -85,6 +113,15 @@ export default function ProfilePage() {
                                                 </span>
                                             )}
                                             <div className="mt-2 text-xl font-bold text-white text-glow-blue">₹{order.total.toFixed(2)}</div>
+
+                                            {isCancellable(order.status) && (
+                                                <button
+                                                    onClick={() => handleCancelOrder(order.id)}
+                                                    className="mt-3 text-xs text-red-400 hover:text-red-300 underline font-bold transition-colors"
+                                                >
+                                                    Cancel Order
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
                                     <div className="space-y-3">
