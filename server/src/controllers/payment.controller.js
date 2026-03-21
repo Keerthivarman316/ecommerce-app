@@ -4,7 +4,9 @@ const prisma = new PrismaClient();
 const checkout = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { items } = req.body;
+        const { items, paymentMethod } = req.body;
+
+        const method = paymentMethod || 'Credit Card';
 
         if (!items || items.length === 0) {
             return res.status(400).json({ message: 'Cart items are missing in payload.' });
@@ -41,7 +43,7 @@ const checkout = async (req, res) => {
                 data: {
                     userId: BigInt(userId),
                     total: total,
-                    status: "PENDING",
+                    status: `PAID|${method}`,
                     items: {
                         create: orderItems
                     }

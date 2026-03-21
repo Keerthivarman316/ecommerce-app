@@ -76,10 +76,15 @@ export default function ProfilePage() {
                                             <div className="text-xs text-slate-500 mt-1">{new Date(order.createdAt).toLocaleDateString()} at {new Date(order.createdAt).toLocaleTimeString()}</div>
                                         </div>
                                         <div className="text-left sm:text-right">
-                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase bg-neon-green/10 text-neon-green border border-neon-green/20">
-                                                <ShieldCheck className="w-3 h-3" /> {order.status}
+                                            <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold uppercase bg-neon-green/10 text-neon-green border border-neon-green/20 mb-2">
+                                                <ShieldCheck className="w-3 h-3" /> {order.status.split('|')[0]}
                                             </span>
-                                            <div className="mt-2 text-xl font-bold text-white">₹{order.total.toFixed(2)}</div>
+                                            {order.status.includes('|') && (
+                                                <span className="block text-xs text-slate-400 uppercase tracking-widest font-bold mb-2">
+                                                    Via •••• {order.status.split('|')[1]}
+                                                </span>
+                                            )}
+                                            <div className="mt-2 text-xl font-bold text-white text-glow-blue">₹{order.total.toFixed(2)}</div>
                                         </div>
                                     </div>
                                     <div className="space-y-3">

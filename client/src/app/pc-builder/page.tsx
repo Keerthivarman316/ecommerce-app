@@ -2,38 +2,25 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Cpu, Monitor, HardDrive, Zap, CheckCircle2, AlertTriangle, ShieldAlert } from 'lucide-react';
+import { ShieldAlert } from 'lucide-react';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { useStore } from '@/context/StoreContext';
 
 import axios from 'axios';
 
-const STEPS = [
-    {
-        id: 'cpu', label: 'Processor', icon: Cpu, options: [
-            { id: 'c1', name: 'Intel Core i9-14900K', price: 54000, socket: 'LGA1700', dbSearch: '14900K' },
-            { id: 'c2', name: 'AMD Ryzen 9 7950X3D', price: 62000, socket: 'AM5', dbSearch: '7950X3D' },
-        ]
-    },
-    {
-        id: 'mobo', label: 'Motherboard', icon: Monitor, options: [
-            { id: 'm1', name: 'ASUS ROG Maximus Z790 Hero', price: 55000, socket: 'LGA1700', dbSearch: 'Z790 Hero' },
-            { id: 'm2', name: 'MSI MPG B650 Carbon WiFi', price: 28000, socket: 'AM5', dbSearch: 'B650' },
-        ]
-    },
-    {
-        id: 'ram', label: 'Memory', icon: HardDrive, options: [
-            { id: 'r1', name: 'Corsair Dominator Titanium DDR5', price: 22000, dbSearch: 'Dominator' },
-            { id: 'r2', name: 'G.Skill Trident Z5 RGB DDR5', price: 18000, dbSearch: 'Trident' },
-        ]
-    },
-    {
-        id: 'gpu', label: 'Graphics Card', icon: Zap, options: [
-            { id: 'g1', name: 'NVIDIA GeForce RTX 4090', price: 165000, dbSearch: '4090' },
-            { id: 'g2', name: 'AMD Radeon RX 7900 XTX', price: 90000, dbSearch: '7900 XTX' },
-        ]
-    }
+interface BuilderStep {
+    id: string;
+    label: string;
+    icon: any;
+    options: any[];
+}
+
+const UI_STEPS_TEMPLATE = [
+    { id: 'cpu', label: 'Processor', icon: Cpu },
+    { id: 'mobo', label: 'Motherboard', icon: Monitor },
+    { id: 'ram', label: 'Memory', icon: HardDrive },
+    { id: 'gpu', label: 'Graphics Card', icon: Zap }
 ];
 
 export default function PCBuilderPage() {
@@ -41,45 +28,62 @@ export default function PCBuilderPage() {
     const [currentStep, setCurrentStep] = useState(0);
     const [build, setBuild] = useState<Record<string, any>>({});
 
-    const activeStepData = STEPS[currentStep];
+    // Data Loading & Compilation Status
+    const [loadingDb, setLoadingDb] = useState(true);
+    const [dynamicSteps, setDynamicSteps] = useState<BuilderStep[]>([]);
 
-    // Compatibility logic (simplified for UI demonstration)
-    const cpuSocket = build['cpu']?.socket;
-    const moboSocket = build['mobo']?.socket;
+    // Dynamically query database components once mounted
+    React.useEffect(() => {
+        const fetchComponents = async () => {
+            try {
+                const res = await axios.get('http://localhost:5000/api/products?limit=100');
+                const products = res.data.products;
+
+                const cpus = products.filter((p: any) => p.category === 'Processors');
+                const mobos = products.filter((p: any) => p.category === 'Motherboards');
+                const rams = products.filter((p: any) => p.category === 'Memory');
+                const gpus = products.filter((p: any) => p.category === 'Graphics Cards');
+
+                // Construct the dynamic nodes using UI templates
+                const steps: BuilderStep[] = [
+                    { ...UI_STEPS_TEMPLATE[0], options: cpus },
+                    { ...UI_STEPS_TEMPLATE[1], options: mobos },
+                    { ...UI_STEPS_TEMPLATE[2], options: rams },
+                    { ...UI_STEPS_TEMPLATE[3], options: gpus }
+                ];
+
+                setDynamicSteps(steps);
+            } catch (error) {
+                console.error("Failed to load component architectures", error);
+            } finally {
+                setLoadingDb(false);
+            }
+        };
+        fetchComponents();
+    }, []);
+
+    const activeStepData = dynamicSteps[currentStep];
+
+    // Compatibility logic (using hardware attributes organically stored in DB)
+    const cpuSocket = build['cpu']?.compatibility || build['cpu']?.productName.includes('Intel') ? 'Intel LGA' : build['cpu']?.productName.includes('Ryzen') ? 'AMD AM5' : null;
+    const moboSocket = build['mobo']?.compatibility || build['mobo']?.productName.includes('Z790') ? 'Intel LGA' : build['mobo']?.productName.includes('B650') ? 'AMD AM5' : null;
 
     const hasCompatibilityError = cpuSocket && moboSocket && cpuSocket !== moboSocket;
 
-    const total = Object.values(build).reduce((sum, item) => sum + item.price, 0);
+    const total = Object.values(build).reduce((sum, item) => sum + Number(item.price), 0);
 
     const handleSelect = (item: any) => {
         setBuild({ ...build, [activeStepData.id]: item });
-        if (currentStep < STEPS.length - 1) {
+        if (currentStep < dynamicSteps.length - 1) {
             setTimeout(() => setCurrentStep(prev => prev + 1), 300);
         }
     };
 
-    const [deploying, setDeploying] = useState(false);
-
-    const addAllToCart = async () => {
-        setDeploying(true);
-        try {
-            for (const item of Object.values(build)) {
-                // Map the theoretical build selection into a native DB product node ID
-                const res = await axios.get(`http://localhost:5000/api/products?search=${encodeURIComponent(item.dbSearch)}`);
-                const dbProducts = res.data.products;
-
-                if (dbProducts && dbProducts.length > 0) {
-                    addToCart(dbProducts[0]);
-                } else {
-                    alert(`System Warning: ${item.name} is currently out of stock bounds and could not be appended.`);
-                }
-            }
-            alert("Rig successfully compiled and deployed to Cart! 🚀");
-        } catch (error) {
-            console.error("Rig compilation failed:", error);
-        } finally {
-            setDeploying(false);
-        }
+    const addAllToCart = () => {
+        Object.values(build).forEach(item => {
+            addToCart(item); // They are officially DB nodes now, passing raw object is perfectly resilient!
+        });
+        alert("Rig components successfully grouped and deployed to Cart! 🚀");
     };
 
     return (
@@ -99,9 +103,13 @@ export default function PCBuilderPage() {
 
                     {/* Progress Tabs */}
                     <div className="flex overflow-x-auto space-x-2 pb-2 scrollbar-hide">
-                        {STEPS.map((step, idx) => {
+                        {loadingDb ? <span className="text-slate-500 animate-pulse px-4 py-2">Loading Core Components...</span> : dynamicSteps.map((step, idx) => {
                             const Icon = step.icon;
-                            const isComplete = !!build[step.id];
+                            let isComplete = false;
+
+                            if (build && step && build[step.id]) {
+                                isComplete = true;
+                            }
                             const isActive = currentStep === idx;
 
                             return (
@@ -132,12 +140,12 @@ export default function PCBuilderPage() {
                                 transition={{ duration: 0.3 }}
                                 className="grid grid-cols-1 md:grid-cols-2 gap-4"
                             >
-                                {activeStepData.options.map((option: any) => {
+                                {activeStepData?.options?.map((option: any) => {
                                     const isSelected = build[activeStepData.id]?.id === option.id;
 
                                     let isWarning = false;
-                                    if (activeStepData.id === 'mobo' && cpuSocket && cpuSocket !== option.socket) isWarning = true;
-                                    if (activeStepData.id === 'cpu' && moboSocket && moboSocket !== option.socket) isWarning = true;
+                                    if (activeStepData.id === 'mobo' && cpuSocket && cpuSocket !== (option.compatibility || (option.productName.includes('Z790') ? 'Intel LGA' : 'AMD AM5'))) isWarning = true;
+                                    if (activeStepData.id === 'cpu' && moboSocket && moboSocket !== (option.compatibility || (option.productName.includes('Intel') ? 'Intel LGA' : 'AMD AM5'))) isWarning = true;
 
                                     return (
                                         <div
@@ -149,12 +157,12 @@ export default function PCBuilderPage() {
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-2">
-                                                <h4 className={`font-bold ${isSelected ? 'text-neon-blue' : 'text-slate-200'}`}>{option.name}</h4>
+                                                <h4 className={`font-bold ${isSelected ? 'text-neon-blue' : 'text-slate-200'} line-clamp-2`}>{option.productName}</h4>
                                             </div>
 
                                             <div className="flex items-center justify-between mt-6">
-                                                <span className="text-xs text-slate-500 uppercase tracking-widest">{option.socket || '-'}</span>
-                                                <span className="text-lg font-black text-white">₹{option.price.toLocaleString()}</span>
+                                                <span className="text-xs text-slate-500 uppercase tracking-widest">{option.compatibility || option.brand || '-'}</span>
+                                                <span className="text-lg font-black text-white">₹{Number(option.price).toLocaleString()}</span>
                                             </div>
 
                                             {isWarning && (
@@ -190,23 +198,21 @@ export default function PCBuilderPage() {
                             )}
 
                             <div className="space-y-4 mb-8 min-h-[200px]">
-                                {STEPS.map(step => {
+                                {loadingDb ? <span className="text-slate-500 animate-pulse text-sm">System connecting...</span> : dynamicSteps.map(step => {
                                     const item = build[step.id];
                                     return (
                                         <div key={`summary-${step.id}`} className="flex justify-between items-start">
                                             <div>
                                                 <span className="block text-xs text-slate-500 uppercase">{step.label}</span>
-                                                <span className={`text-sm ${item ? 'text-white' : 'text-slate-700 italic'}`}>
-                                                    {item ? item.name : 'Select a component'}
+                                                <span className={`text-sm ${item ? 'text-white line-clamp-1' : 'text-slate-700 italic'}`}>
+                                                    {item ? item.productName : 'Select a component'}
                                                 </span>
                                             </div>
-                                            {item && <span className="text-sm font-bold text-slate-300 shrink-0">₹{item.price.toLocaleString()}</span>}
+                                            {item && <span className="text-sm font-bold text-slate-300 shrink-0 mx-2">₹{Number(item.price).toLocaleString()}</span>}
                                         </div>
                                     );
                                 })}
-                            </div>
-
-                            <div className="border-t border-slate-700 pt-6 mb-6">
+                            </div> <div className="border-t border-slate-700 pt-6 mb-6">
                                 <div className="flex justify-between items-end">
                                     <span className="text-slate-400 uppercase tracking-widest text-sm font-bold">Total Power</span>
                                     <span className="text-3xl font-black text-white text-glow-blue">₹{total.toLocaleString()}</span>
@@ -216,10 +222,10 @@ export default function PCBuilderPage() {
                             <GlowButton
                                 variant="blue"
                                 className="w-full py-4 text-lg flex items-center justify-center gap-2"
-                                disabled={Object.keys(build).length === 0 || hasCompatibilityError || deploying}
+                                disabled={Object.keys(build).length === 0 || hasCompatibilityError || loadingDb}
                                 onClick={addAllToCart}
                             >
-                                {deploying ? "Fetching Models..." : "Deploy to Cart 🚀"}
+                                {loadingDb ? "Fetching Models..." : "Deploy to Cart 🚀"}
                             </GlowButton>
                         </GlassPanel>
                     </div>

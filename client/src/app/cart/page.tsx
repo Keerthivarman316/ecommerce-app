@@ -13,6 +13,8 @@ export default function CartPage() {
     const { cart, removeFromCart, updateQuantity, clearCart } = useStore();
     const [isCheckingOut, setIsCheckingOut] = useState(false);
     const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null);
+    const [checkoutStep, setCheckoutStep] = useState<1 | 2>(1);
+    const [paymentMethod, setPaymentMethod] = useState<string>('Credit Card');
 
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const tax = subtotal * 0.08;
@@ -35,7 +37,10 @@ export default function CartPage() {
             // Send items to backend because Cart exists entirely on frontend localstorage context
             const payloadItems = cart.map(item => ({ productId: item.id, quantity: item.quantity }));
 
-            const res = await axios.post('http://localhost:5000/api/payment/checkout', { items: payloadItems }, {
+            const res = await axios.post('http://localhost:5000/api/payment/checkout', {
+                items: payloadItems,
+                paymentMethod: paymentMethod
+            }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -135,10 +140,35 @@ export default function CartPage() {
                                     </div>
                                 </div>
 
-                                <GlowButton onClick={handleCheckout} variant="blue" className="w-full py-4 text-lg justify-between px-6" disabled={cart.length === 0 || isCheckingOut}>
-                                    <span>{isCheckingOut ? "Processing Link..." : "Secure Checkout"}</span>
-                                    {isCheckingOut ? <Loader2 className="w-5 h-5 animate-spin" /> : <ChevronRight className="w-5 h-5 opacity-70" />}
-                                </GlowButton>
+                                {checkoutStep === 1 ? (
+                                    <GlowButton onClick={() => setCheckoutStep(2)} variant="blue" className="w-full py-4 text-lg justify-between px-6" disabled={cart.length === 0}>
+                                        <span>Proceed to Payment</span>
+                                        <ChevronRight className="w-5 h-5 opacity-70" />
+                                    </GlowButton>
+                                ) : (
+                                    <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+                                        <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-3">Select Mode of Payment</h3>
+                                        <div className="space-y-2 mb-6">
+                                            {['Credit Card', 'UPI', 'Net Banking', 'Cash on Delivery'].map(method => (
+                                                <div
+                                                    key={method}
+                                                    onClick={() => setPaymentMethod(method)}
+                                                    className={`p-3 rounded-lg border cursor-pointer transition-all ${paymentMethod === method ? 'border-neon-blue bg-neon-blue/10 text-white' : 'border-slate-700 bg-slate-800/40 text-slate-400 hover:border-slate-500'}`}
+                                                >
+                                                    <span className="font-semibold">{method}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex gap-3">
+                                            <button onClick={() => setCheckoutStep(1)} className="px-4 py-3 text-slate-400 hover:text-white transition-colors bg-slate-800 rounded-lg">Back</button>
+                                            <GlowButton onClick={handleCheckout} variant="purple" className="flex-1 py-4 text-lg justify-center px-4" disabled={isCheckingOut}>
+                                                <span>{isCheckingOut ? "Connecting..." : "Confirm & Pay"}</span>
+                                                {isCheckingOut && <Loader2 className="w-5 h-5 animate-spin ml-2" />}
+                                            </GlowButton>
+                                        </div>
+                                    </div>
+                                )}
                             </GlassPanel>
                         </div>
                     </div>
