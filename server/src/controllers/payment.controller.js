@@ -15,6 +15,10 @@ const checkout = async (req, res) => {
 
         // Validate products and calculate exact total from DB pricing to prevent spoofing
         for (const item of items) {
+            if (!item.productId || isNaN(Number(item.productId))) {
+                return res.status(400).json({ message: `Invalid Product Architecture: Unrecognized signature (${item.productId}). Please clear your cart and re-select database valid components.` });
+            }
+
             const product = await prisma.product.findUnique({ where: { id: BigInt(item.productId) } });
 
             if (!product) return res.status(404).json({ message: `Product ${item.productId} lost to the void.` });

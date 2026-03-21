@@ -7,30 +7,31 @@ import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlowButton } from '@/components/ui/GlowButton';
 import { useStore } from '@/context/StoreContext';
 
+import axios from 'axios';
+
 const STEPS = [
     {
         id: 'cpu', label: 'Processor', icon: Cpu, options: [
-            { id: 'c1', name: 'Intel Core i9-14900K', price: 48500, socket: 'LGA1700' },
-            { id: 'c2', name: 'AMD Ryzen 9 7950X3D', price: 61500, socket: 'AM5' },
-            { id: 'c3', name: 'Intel Core i5-13600K', price: 25000, socket: 'LGA1700' },
+            { id: 'c1', name: 'Intel Core i9-14900K', price: 54000, socket: 'LGA1700', dbSearch: '14900K' },
+            { id: 'c2', name: 'AMD Ryzen 9 7950X3D', price: 62000, socket: 'AM5', dbSearch: '7950X3D' },
         ]
     },
     {
         id: 'mobo', label: 'Motherboard', icon: Monitor, options: [
-            { id: 'm1', name: 'ASUS ROG Maximus Z790 Hero', price: 54000, socket: 'LGA1700' },
-            { id: 'm2', name: 'MSI MAG X670E Tomahawk', price: 26000, socket: 'AM5' },
+            { id: 'm1', name: 'ASUS ROG Maximus Z790 Hero', price: 55000, socket: 'LGA1700', dbSearch: 'Z790 Hero' },
+            { id: 'm2', name: 'MSI MPG B650 Carbon WiFi', price: 28000, socket: 'AM5', dbSearch: 'B650' },
         ]
     },
     {
         id: 'ram', label: 'Memory', icon: HardDrive, options: [
-            { id: 'r1', name: 'CORSAIR Dominator Titanium 64GB DDR5', price: 23500 },
-            { id: 'r2', name: 'G.SKILL Trident Z5 RGB 32GB DDR5', price: 10500 },
+            { id: 'r1', name: 'Corsair Dominator Titanium DDR5', price: 22000, dbSearch: 'Dominator' },
+            { id: 'r2', name: 'G.Skill Trident Z5 RGB DDR5', price: 18000, dbSearch: 'Trident' },
         ]
     },
     {
         id: 'gpu', label: 'Graphics Card', icon: Zap, options: [
-            { id: 'g1', name: 'NVIDIA RTX 4090 FE', price: 155000 },
-            { id: 'g2', name: 'AMD Radeon RX 7900 XTX', price: 85000 },
+            { id: 'g1', name: 'NVIDIA GeForce RTX 4090', price: 165000, dbSearch: '4090' },
+            { id: 'g2', name: 'AMD Radeon RX 7900 XTX', price: 90000, dbSearch: '7900 XTX' },
         ]
     }
 ];
@@ -57,18 +58,28 @@ export default function PCBuilderPage() {
         }
     };
 
-    const addAllToCart = () => {
-        Object.values(build).forEach(item => {
-            addToCart({
-                ...item,
-                productName: item.name,
-                category: "PC Component",
-                brand: "Custom Build Selection",
-                gamerRating: 5.0,
-                stock: 10
-            });
-        });
-        alert("Rig added to cart!");
+    const [deploying, setDeploying] = useState(false);
+
+    const addAllToCart = async () => {
+        setDeploying(true);
+        try {
+            for (const item of Object.values(build)) {
+                // Map the theoretical build selection into a native DB product node ID
+                const res = await axios.get(`http://localhost:5000/api/products?search=${encodeURIComponent(item.dbSearch)}`);
+                const dbProducts = res.data.products;
+
+                if (dbProducts && dbProducts.length > 0) {
+                    addToCart(dbProducts[0]);
+                } else {
+                    alert(`System Warning: ${item.name} is currently out of stock bounds and could not be appended.`);
+                }
+            }
+            alert("Rig successfully compiled and deployed to Cart! 🚀");
+        } catch (error) {
+            console.error("Rig compilation failed:", error);
+        } finally {
+            setDeploying(false);
+        }
     };
 
     return (
@@ -98,8 +109,8 @@ export default function PCBuilderPage() {
                                     key={step.id}
                                     onClick={() => setCurrentStep(idx)}
                                     className={`flex items-center gap-2 px-4 py-3 rounded-t-xl border-b-2 whitespace-nowrap transition-colors ${isActive ? 'bg-slate-800/80 border-neon-blue text-white' :
-                                            isComplete ? 'bg-slate-900/50 border-neon-green text-slate-300' :
-                                                'bg-transparent border-transparent text-slate-500 hover:text-slate-300'
+                                        isComplete ? 'bg-slate-900/50 border-neon-green text-slate-300' :
+                                            'bg-transparent border-transparent text-slate-500 hover:text-slate-300'
                                         }`}
                                 >
                                     <Icon className={`w-4 h-4 ${isComplete && !isActive ? 'text-neon-green' : ''}`} />
@@ -133,8 +144,8 @@ export default function PCBuilderPage() {
                                             key={option.id}
                                             onClick={() => handleSelect(option)}
                                             className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${isSelected ? 'bg-neon-blue/10 border-neon-blue shadow-[0_0_15px_rgba(59,130,246,0.3)]' :
-                                                    isWarning ? 'bg-slate-900/40 border-slate-800 opacity-50' :
-                                                        'bg-slate-800/40 border-slate-700 hover:border-slate-500 hover:bg-slate-800'
+                                                isWarning ? 'bg-slate-900/40 border-slate-800 opacity-50' :
+                                                    'bg-slate-800/40 border-slate-700 hover:border-slate-500 hover:bg-slate-800'
                                                 }`}
                                         >
                                             <div className="flex justify-between items-start mb-2">
@@ -204,11 +215,11 @@ export default function PCBuilderPage() {
 
                             <GlowButton
                                 variant="blue"
-                                className="w-full py-4 text-lg"
-                                disabled={Object.keys(build).length === 0 || hasCompatibilityError}
+                                className="w-full py-4 text-lg flex items-center justify-center gap-2"
+                                disabled={Object.keys(build).length === 0 || hasCompatibilityError || deploying}
                                 onClick={addAllToCart}
                             >
-                                Deploy to Cart 🚀
+                                {deploying ? "Fetching Models..." : "Deploy to Cart 🚀"}
                             </GlowButton>
                         </GlassPanel>
                     </div>
